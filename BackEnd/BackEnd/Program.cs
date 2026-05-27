@@ -24,12 +24,9 @@ namespace BackEnd {
                 });
             });
 
-            builder.Services.AddDbContext<ArticalContext>(options =>
-            {
-                options.UseMySql(
-                    "Server=127.0.0.1;Database=Blog;User=cydn;Password=F3nr!rsR0ar;",
-                    ServerVersion.AutoDetect("Server=127.0.0.1;Database=Blog;User=cydn;Password=F3nr!rsR0ar;")
-                );
+            builder.Services.AddDbContext<ArticalContext>(options => {
+                var conn = builder.Configuration.GetConnectionString("BlogDb");
+                options.UseMySql(conn, ServerVersion.AutoDetect(conn));
             });
 
             builder.Services.AddScoped<IArticleService, ArticleService>();
