@@ -1,4 +1,5 @@
 using BackEnd.Models;
+using BackEnd.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileSystemGlobbing.Internal;
 
@@ -26,10 +27,12 @@ namespace BackEnd {
             builder.Services.AddDbContext<ArticalContext>(options =>
             {
                 options.UseMySql(
-                    "Server=127.0.0.1;Database=Blog;User=quidon;Password=T0r;",
-                    ServerVersion.AutoDetect("Server=127.0.0.1;Database=Blog;User=quidon;Password=T0r;")
+                    "Server=127.0.0.1;Database=Blog;User=cydn;Password=F3nr!rsR0ar;",
+                    ServerVersion.AutoDetect("Server=127.0.0.1;Database=Blog;User=cydn;Password=F3nr!rsR0ar;")
                 );
             });
+
+            builder.Services.AddScoped<IArticleService, ArticleService>();
 
             var app = builder.Build();
 

@@ -1,11 +1,8 @@
 ﻿using BackEnd.Models;
 using BackEnd.Requests;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileSystemGlobbing;
-using Microsoft.Extensions.FileSystemGlobbing.Internal;
-using System.Numerics;
-using System.Text.RegularExpressions;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -16,8 +13,12 @@ namespace BackEnd.Controllers
     public class BlogController : ControllerBase
     {
         private readonly ArticalContext _context;
+        private readonly ArticleService _readOnlyArticleService;
 
-        public BlogController(ArticalContext _ctx) { _context = _ctx; }
+        public BlogController(ArticalContext _ctx, ArticleService _articleService) { 
+            _context = _ctx; 
+            _readOnlyArticleService = _articleService;
+        }
 
         [HttpGet("artical/{_id}")]
         public async Task<IActionResult> GetArtical(int _id)
@@ -146,26 +147,7 @@ namespace BackEnd.Controllers
         [HttpPost("MakeArtical")]
         public async Task<IActionResult> MakeArtical([FromBody] ArticalRequest _req)
         {
-            // Author check
-
-            var article = new Artical
-            {
-                Title = _req.Title,
-                Slug = _req.Slug ?? "Unkown-Slug",
-                Content = _req.Content,
-                Summary = _req.Summary ?? "Unkown-Summary",
-                ImageUrl = _req.ImageUrl ?? "Unkown-Img",
-                AuthorId = _req.AuthorId,
-                CreatedTime = DateTime.UtcNow,
-                DeletedTime = null,
-                LastUpdatedTime = null,
-                LastPolishedTime = null,
-                IsPushiled = _req.IsPushiled
-            };
-
-            _context.articles.Add(article);
-            await _context.SaveChangesAsync();
-
+            var article = await _readOnlyArticleService.Create(_req);
             return Ok(new { id = article.Id });
         }
 
