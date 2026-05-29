@@ -13,9 +13,9 @@ namespace BackEnd.Controllers
     public class BlogController : ControllerBase
     {
         private readonly ArticalContext _context;
-        private readonly ArticleService _readOnlyArticleService;
+        private readonly IArticleService _readOnlyArticleService;
 
-        public BlogController(ArticalContext _ctx, ArticleService _articleService) { 
+        public BlogController(ArticalContext _ctx, IArticleService _articleService) { 
             _context = _ctx; 
             _readOnlyArticleService = _articleService;
         }
