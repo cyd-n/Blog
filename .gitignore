@@ -129,9 +129,9 @@ appsettings.Production.json
 appsettings.Local.json
 
 # Optional backend-specific overrides
-BackEnd/appsettings.Development.json
-BackEnd/appsettings.Production.json
-BackEnd/appsettings.Local.json
+BackEnd/BackEnd/appsettings.Development.json
+BackEnd/BackEnd/appsettings.Production.json
+BackEnd/BackEnd/appsettings.Local.json
 
 # =========================
 # OS-generated files
