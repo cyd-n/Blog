@@ -1,3 +1,4 @@
+using BackEnd.Middleware;
 using BackEnd.Models;
 using BackEnd.Services;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,7 @@ namespace BackEnd {
 
             app.UseCors();
 
+            app.UseMiddleware<RequestLoggingMiddleware>();
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
