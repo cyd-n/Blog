@@ -31,6 +31,8 @@ namespace BackEnd {
             });
 
             builder.Services.AddScoped<IArticleService, ArticleService>();
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+            builder.Services.AddProblemDetails();
 
             var app = builder.Build();
 
@@ -40,6 +42,7 @@ namespace BackEnd {
                 app.UseSwaggerUI();
             }
 
+            app.UseExceptionHandler();
             app.UseCors();
 
             app.UseMiddleware<RequestLoggingMiddleware>();
