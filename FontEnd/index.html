@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog</title>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-100 min-h-screen">
+
+<div
+    x-data="blogPage()"
+    x-init="loadArticle()"
+    class="max-w-4xl mx-auto py-10 px-4">
+
+    <!-- Loading -->
+    <div
+        x-show="loading"
+        class="bg-white rounded-xl p-8 shadow">
+        Loading article...
+    </div>
+
+    <!-- Error -->
+    <div
+        x-show="error"
+        class="bg-red-100 border border-red-300 text-red-700 rounded-xl p-4">
+        <span x-text="error"></span>
+    </div>
+
+    <!-- Article -->
+    <article
+        x-show="article"
+        class="bg-white shadow-lg rounded-2xl overflow-hidden">
+
+        <!-- Hero Image -->
+        <img
+            :src="article?.img"
+            :alt="article?.title"
+            class="w-full h-96 object-cover">
+
+        <div class="p-8">
+
+            <!-- Category -->
+            <div class="mb-4">
+                <span
+                    class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
+                    x-text="article?.category?.name">
+                </span>
+            </div>
+
+            <!-- Title -->
+            <h1
+                class="text-4xl font-bold text-slate-900 mb-4"
+                x-text="article?.title">
+            </h1>
+
+            <!-- Summary -->
+            <p
+                class="text-lg text-slate-600 mb-6"
+                x-text="article?.summary">
+            </p>
+
+            <!-- Author -->
+            <div class="flex items-center gap-4 mb-8">
+
+                <img
+                    :src="article?.author?.img"
+                    :alt="article?.author?.name"
+                    class="w-14 h-14 rounded-full object-cover">
+
+                <div>
+                    <div
+                        class="font-semibold"
+                        x-text="article?.author?.name">
+                    </div>
+
+                    <div
+                        class="text-sm text-slate-500"
+                        x-text="article?.author?.email">
+                    </div>
+                </div>
+
+                <div class="ml-auto text-sm text-slate-500">
+                    <span x-text="formatDate(article?.createDate)"></span>
+                </div>
+
+            </div>
+
+            <hr class="mb-8">
+
+            <!-- Content -->
+            <div
+                class="prose prose-lg max-w-none"
+                x-text="article?.content">
+            </div>
+
+        </div>
+
+    </article>
+
+</div>
+
+<script>
+function blogPage() {
+    return {
+
+        loading: true,
+        error: null,
+        article: null,
+
+        async loadArticle() {
+
+            try {
+
+                const response = await fetch(
+                    'http://localhost:5200/api/Blog/artical/1'
+                );
+
+                if (!response.ok) {
+                    throw new Error('Failed to load article');
+                }
+
+                this.article = await response.json();
+
+            } catch (err) {
+
+                this.error = err.message;
+
+            } finally {
+
+                this.loading = false;
+            }
+        },
+
+        formatDate(dateString) {
+
+            if (!dateString) return '';
+
+            return new Date(dateString)
+                .toLocaleDateString();
+        }
+    }
+}
+</script>
+
+</body>
+</html>
