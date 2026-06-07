@@ -1,150 +1,692 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chronicles of CYD-N</title>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IM+Fell+English:ital@0;1&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #100d08;
+    --ink-faded: #2e2316;
+    --ink-light: #5c4a30;
+    --paper: #f0e6ce;
+    --paper-dark: #e2d3b0;
+    --paper-darker: #cfc09a;
+    --red: #7a1515;
+    --red-light: #9e2020;
+    --gold: #8a6c20;
+    --rule: #1a1006;
+  }
 
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: #b0a090;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(0,0,0,0.04) 27px, rgba(0,0,0,0.04) 28px);
+    font-family: 'IM Fell English', Georgia, serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 200;
+    opacity: 0.28;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+
+  /* ─────────── NAV BAR ─────────── */
+  .navbar {
+    background: var(--ink);
+    border-bottom: 3px solid var(--red);
+    position: sticky;
+    top: 0;
+    z-index: 150;
+  }
+
+  .nav-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .nav-section-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    padding: 0.45rem 1rem;
+    border-right: 1px solid #333;
+    white-space: nowrap;
+  }
+
+  .nav-links {
+    display: flex;
+    list-style: none;
+    flex: 1;
+    flex-wrap: wrap;
+  }
+
+  .nav-links li a {
+    display: block;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #d4c9b0;
+    text-decoration: none;
+    padding: 0.6rem 0.9rem;
+    border-right: 1px solid #2a2520;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .nav-links li a:hover,
+  .nav-links li a.active {
+    background: var(--red);
+    color: var(--paper);
+  }
+
+  .nav-date {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    color: #7a7060;
+    letter-spacing: 0.06em;
+    padding: 0 1rem;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  /* ─────────── WRAPPER ─────────── */
+  .page-wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  /* ─────────── MASTHEAD ─────────── */
+  .masthead {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-bottom: none;
+    text-align: center;
+    padding: 1.4rem 2rem 0;
+    position: relative;
+  }
+
+  .masthead-name {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: clamp(2.8rem, 8vw, 5.2rem);
+    line-height: 1;
+    color: var(--ink);
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.18);
+    letter-spacing: 0.01em;
+    margin-bottom: 0.25rem;
+  }
+
+  .masthead-motto {
+    font-family: 'IM Fell English', Georgia, serif;
+    font-style: italic;
+    font-size: 0.88rem;
+    color: var(--ink-light);
+    letter-spacing: 0.06em;
+    margin-bottom: 0.9rem;
+    border-top: 1px solid var(--paper-darker);
+    border-bottom: 1px solid var(--paper-darker);
+    padding: 0.35rem 0;
+  }
+
+  /* ─────────── LAYOUT GRID ─────────── */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 0;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+  }
+
+  /* ─────────── MAIN ARTICLE ─────────── */
+  .main-col {
+    border-right: 2px solid var(--ink);
+    padding: 1.4rem 1.8rem 2rem;
+    min-width: 0;
+  }
+
+  .category-stamp {
+    display: inline-block;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--paper);
+    background: var(--red);
+    padding: 0.18rem 0.65rem;
+    margin-bottom: 0.8rem;
+    border: 1px solid #4a0a0a;
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+  }
+
+  .headline {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 900;
+    font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  .rule-ornate {
+    text-align: center;
+    color: var(--gold);
+    font-size: 1rem;
+    margin: 0.55rem 0;
+    letter-spacing: 0.4em;
+  }
+
+  .deck {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--ink-faded);
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+  }
+
+  hr.rule-double { border: none; border-top: 3px double var(--rule); }
+  hr.rule-thin   { border: none; border-top: 1px solid var(--paper-darker); margin: 0.9rem 0; }
+
+  .byline-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    margin: 1rem 0;
+  }
+
+  .author-portrait {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    filter: sepia(55%) contrast(1.1);
+    border: 2px solid var(--ink);
+    flex-shrink: 0;
+  }
+
+  .byline-name {
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .byline-email {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-light);
+    margin-top: 0.1rem;
+  }
+
+  .byline-date {
+    margin-left: auto;
+    text-align: right;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-light);
+    line-height: 1.7;
+  }
+
+  .byline-date .edition-tag {
+    color: var(--red);
+    font-weight: 700;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+  }
+
+  .hero-img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    display: block;
+    filter: sepia(35%) contrast(1.06) brightness(0.95);
+    border: 1px solid var(--ink);
+    outline: 3px solid var(--paper);
+    outline-offset: -5px;
+    margin-bottom: 1rem;
+  }
+
+  .article-content {
+    font-family: 'IM Fell English', Georgia, serif;
+    font-size: 1rem;
+    line-height: 1.78;
+    color: var(--ink-faded);
+    column-count: 2;
+    column-gap: 2rem;
+    column-rule: 1px solid var(--paper-darker);
+    text-align: justify;
+    hyphens: auto;
+    margin-top: 0.8rem;
+  }
+
+  .article-content::first-letter {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 4.2rem;
+    float: left;
+    line-height: 0.78;
+    margin: 0.15rem 0.35rem -0.1rem 0;
+    color: var(--ink);
+  }
+
+  /* ─────────── SIDEBAR ─────────── */
+  .sidebar {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-section {
+    border-bottom: 2px solid var(--ink);
+    padding: 1rem 1.1rem;
+  }
+
+  .sidebar-section:last-child { border-bottom: none; }
+
+  .sidebar-heading {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 1.3rem;
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink-light);
+    padding-bottom: 0.3rem;
+    margin-bottom: 0.7rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* Related articles */
+  .related-article {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px dashed var(--paper-darker);
+    cursor: pointer;
+  }
+
+  .related-article:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .related-cat {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+
+  .related-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    line-height: 1.25;
+    color: var(--ink);
+    transition: color 0.15s;
+  }
+
+  .related-article:hover .related-title { color: var(--red); }
+
+  .related-blurb {
+    font-family: 'IM Fell English', Georgia, serif;
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--ink-light);
+    line-height: 1.4;
+  }
+
+  .related-date {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    color: var(--paper-darker);
+    filter: brightness(0.6);
+  }
+
+  /* ─────────── ADS ─────────── */
+  .ad-box {
+    border: 2px solid var(--ink);
+    margin-bottom: 0.85rem;
+    text-align: center;
+    padding: 0.85rem 0.7rem;
+    background: var(--paper-dark);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ad-box::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid var(--ink-light);
+    pointer-events: none;
+  }
+
+  .ad-box:last-child { margin-bottom: 0; }
+
+  .ad-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.4rem;
+  }
+
+  .ad-headline {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 1.4rem;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 0.3rem;
+  }
+
+  .ad-body {
+    font-family: 'IM Fell English', Georgia, serif;
+    font-style: italic;
+    font-size: 0.78rem;
+    color: var(--ink-faded);
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+  }
+
+  .ad-cta {
+    display: inline-block;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--paper);
+    background: var(--ink);
+    padding: 0.25rem 0.7rem;
+    text-decoration: none;
+    border: 1px solid var(--ink);
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer;
+  }
+
+  .ad-cta:hover { background: var(--red); }
+
+  .ad-ornament { color: var(--gold); font-size: 1.1rem; margin: 0.2rem 0; }
+
+  /* ─────────── STATUS ─────────── */
+  .status-box {
+    padding: 3rem 2rem;
+    text-align: center;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-light);
+  }
+
+  .error-box {
+    background: #f5e6e6;
+    border: 2px solid var(--red);
+    color: var(--red);
+    margin: 1.5rem;
+    padding: 0.9rem 1.3rem;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─────────── FOOTER ─────────── */
+  .footer-strip {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-top: 3px double var(--rule);
+    padding: 0.65rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    color: var(--ink-light);
+    letter-spacing: 0.08em;
+  }
+
+  /* ─────────── RESPONSIVE ─────────── */
+  @media (max-width: 700px) {
+    .content-grid { grid-template-columns: 1fr; }
+    .main-col { border-right: none; border-bottom: 2px solid var(--ink); padding: 1rem; }
+    .sidebar { padding: 1rem; }
+    .article-content { column-count: 1; }
+    .nav-date { display: none; }
+    .footer-strip { flex-direction: column; gap: 0.3rem; }
+  }
+</style>
 </head>
+<body x-data="blogPage()" x-init="loadArticle()">
 
-<body class="bg-slate-100 min-h-screen">
+<!-- ══════════ NAVBAR ══════════ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <span class="nav-section-label">Chronicles of CYD-N</span>
+    <ul class="nav-links">
+      <li><a href="#" class="active">Home</a></li>
+      <li><a href="#">Politics</a></li>
+      <li><a href="#">Society</a></li>
+      <li><a href="#">Commerce</a></li>
+      <li><a href="#">Science</a></li>
+      <li><a href="#">The Arts</a></li>
+      <li><a href="#">Sport</a></li>
+      <li><a href="#">Letters</a></li>
+    </ul>
+    <span class="nav-date" x-text="todayLong"></span>
+  </div>
+</nav>
 
-<div
-    x-data="blogPage()"
-    x-init="loadArticle()"
-    class="max-w-4xl mx-auto py-10 px-4">
+<div class="page-wrap">
 
-    <!-- Loading -->
-    <div
-        x-show="loading"
-        class="bg-white rounded-xl p-8 shadow">
-        Loading article...
+  <!-- ══════════ MASTHEAD ══════════ -->
+  <div class="masthead">
+    <div class="masthead-name">Chronicles of CYD-N</div>
+    <div class="masthead-motto">
+      Illuminating the Realm &mdash; From Fog-Bound Borough to Empire's Edge &mdash; Since the Age of Press &amp; Principle
     </div>
+  </div>
 
-    <!-- Error -->
-    <div
-        x-show="error"
-        class="bg-red-100 border border-red-300 text-red-700 rounded-xl p-4">
-        <span x-text="error"></span>
-    </div>
+  <!-- ══════════ CONTENT GRID ══════════ -->
+  <div class="content-grid">
 
-    <!-- Article -->
-    <article
-        x-show="article"
-        class="bg-white shadow-lg rounded-2xl overflow-hidden">
+    <!-- ── MAIN ARTICLE COLUMN ── -->
+    <main class="main-col">
 
-        <!-- Hero Image -->
-        <img
-            :src="article?.img"
-            :alt="article?.title"
-            class="w-full h-96 object-cover">
+      <!-- Loading -->
+      <div x-show="loading" class="status-box">
+        ✦ &nbsp; Compositing the type &hellip; the pressman bids you patience &nbsp; ✦
+      </div>
 
-        <div class="p-8">
+      <!-- Error -->
+      <div x-show="error && !loading" class="error-box">
+        ⚠ Correspondent's Dispatch &mdash; <span x-text="error"></span>
+      </div>
 
-            <!-- Category -->
-            <div class="mb-4">
-                <span
-                    class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
-                    x-text="article?.category?.name">
-                </span>
-            </div>
+      <!-- Article -->
+      <div x-show="article && !loading">
 
-            <!-- Title -->
-            <h1
-                class="text-4xl font-bold text-slate-900 mb-4"
-                x-text="article?.title">
-            </h1>
-
-            <!-- Summary -->
-            <p
-                class="text-lg text-slate-600 mb-6"
-                x-text="article?.summary">
-            </p>
-
-            <!-- Author -->
-            <div class="flex items-center gap-4 mb-8">
-
-                <img
-                    :src="article?.author?.img"
-                    :alt="article?.author?.name"
-                    class="w-14 h-14 rounded-full object-cover">
-
-                <div>
-                    <div
-                        class="font-semibold"
-                        x-text="article?.author?.name">
-                    </div>
-
-                    <div
-                        class="text-sm text-slate-500"
-                        x-text="article?.author?.email">
-                    </div>
-                </div>
-
-                <div class="ml-auto text-sm text-slate-500">
-                    <span x-text="formatDate(article?.createDate)"></span>
-                </div>
-
-            </div>
-
-            <hr class="mb-8">
-
-            <!-- Content -->
-            <div
-                class="prose prose-lg max-w-none"
-                x-text="article?.content">
-            </div>
-
+        <div style="text-align:center;">
+          <span class="category-stamp" x-text="article?.category?.name"></span>
         </div>
 
-    </article>
+        <h1 class="headline" x-text="article?.title"></h1>
 
-</div>
+        <div class="rule-ornate">— ✦ —</div>
+
+        <p class="deck" x-text="article?.summary"></p>
+
+        <hr class="rule-double">
+
+        <div class="byline-bar">
+          <img class="author-portrait"
+               :src="article?.author?.img"
+               :alt="article?.author?.name">
+          <div>
+            <div class="byline-name">By <span x-text="article?.author?.name"></span></div>
+            <div class="byline-email" x-text="article?.author?.email"></div>
+          </div>
+          <div class="byline-date">
+            <div x-text="formatDate(article?.createDate)"></div>
+            <div class="edition-tag">Special Correspondence</div>
+          </div>
+        </div>
+
+        <img class="hero-img"
+             :src="article?.img"
+             :alt="article?.title">
+
+        <hr class="rule-thin">
+
+        <div class="article-content" x-text="article?.content"></div>
+
+      </div>
+    </main>
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+
+      <!-- Related Articles -->
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Further Reading</div>
+
+        <div class="related-article">
+          <div class="related-cat">Society</div>
+          <div class="related-title">The Gentleman's Club Faces Its Most Scandalous Season Yet</div>
+          <div class="related-blurb">Members of the Athenaeum report unprecedented disorder in the reading room.</div>
+          <div class="related-date">4th June, 2025</div>
+        </div>
+
+        <div class="related-article">
+          <div class="related-cat">Commerce</div>
+          <div class="related-title">Wool Prices Soar Amid Drought on the Yorkshire Moors</div>
+          <div class="related-blurb">Traders on the Leeds exchange brace for a turbulent quarter ahead.</div>
+          <div class="related-date">2nd June, 2025</div>
+        </div>
+
+        <div class="related-article">
+          <div class="related-cat">Science</div>
+          <div class="related-title">Royal Society Convenes on the Matter of Mechanical Computation</div>
+          <div class="related-blurb">A most curious demonstration of calculating engines draws large crowds.</div>
+          <div class="related-date">30th May, 2025</div>
+        </div>
+
+        <div class="related-article">
+          <div class="related-cat">The Arts</div>
+          <div class="related-title">A New Production at the Lyceum Causes Quite the Stir</div>
+          <div class="related-blurb">Critics remain divided; the public, however, is thoroughly captivated.</div>
+          <div class="related-date">28th May, 2025</div>
+        </div>
+
+        <div class="related-article">
+          <div class="related-cat">Politics</div>
+          <div class="related-title">Parliament in Uproar Over the Latest Budget Proposals</div>
+          <div class="related-blurb">Heated exchanges on the floor; the PM refuses to yield an inch.</div>
+          <div class="related-date">25th May, 2025</div>
+        </div>
+      </div>
+
+      <!-- Advertisements -->
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Notices &amp; Trade</div>
+
+        <div class="ad-box">
+          <div class="ad-label">— Advertisement —</div>
+          <div class="ad-headline">Fortnum &amp; Mason</div>
+          <div class="ad-ornament">✦</div>
+          <div class="ad-body">Purveyors of the Finest Teas, Preserves &amp; Comestibles to the Discerning Household of Britain. Established Piccadilly, 1707.</div>
+          <span class="ad-cta">Enquire Within</span>
+        </div>
+
+        <div class="ad-box">
+          <div class="ad-label">— Advertisement —</div>
+          <div class="ad-headline">Barrister &amp; Co.</div>
+          <div class="ad-ornament">⚖</div>
+          <div class="ad-body">Legal counsel of the highest discretion. Wills, estates &amp; commercial disputes handled with rigour and confidentiality.</div>
+          <span class="ad-cta">Retain Counsel</span>
+        </div>
+
+        <div class="ad-box">
+          <div class="ad-label">— Notice —</div>
+          <div class="ad-headline">The CYD-N Lecture Series</div>
+          <div class="ad-ornament">✒</div>
+          <div class="ad-body">
+            <em>"On the Progress of the Modern Age"</em><br>
+            Guild Hall &mdash; Every Thursday Eve<br>
+            Doors Open at Half Seven
+          </div>
+          <span class="ad-cta">Reserve Your Seat</span>
+        </div>
+
+      </div>
+
+    </aside>
+  </div><!-- /content-grid -->
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <div class="footer-strip">
+    <span>Chronicles of CYD-N &mdash; All Correspondence to the Editor</span>
+    <span>✦</span>
+    <span>Printed by the Chronicle Press &mdash; Not to be reproduced without consent</span>
+  </div>
+
+</div><!-- /page-wrap -->
 
 <script>
 function blogPage() {
-    return {
-
-        loading: true,
-        error: null,
-        article: null,
-
-        async loadArticle() {
-
-            try {
-
-                const response = await fetch(
-                    'http://localhost:5200/api/Blog/artical/1'
-                );
-
-                if (!response.ok) {
-                    throw new Error('Failed to load article');
-                }
-
-                this.article = await response.json();
-
-            } catch (err) {
-
-                this.error = err.message;
-
-            } finally {
-
-                this.loading = false;
-            }
-        },
-
-        formatDate(dateString) {
-
-            if (!dateString) return '';
-
-            return new Date(dateString)
-                .toLocaleDateString();
-        }
+  return {
+    loading: true,
+    error: null,
+    article: null,
+    todayLong: '',
+    async loadArticle() {
+      this.todayLong = new Date().toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+      try {
+        const response = await fetch('http://localhost:5200/api/Blog/artical/1');
+        if (!response.ok) throw new Error('The correspondent failed to file his report.');
+        this.article = await response.json();
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+    formatDate(dateString) {
+      if (!dateString) return '';
+      return new Date(dateString).toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
     }
+  }
 }
 </script>
-
 </body>
 </html>
