@@ -554,7 +554,6 @@
           </div>
           <div class="byline-date">
             <div x-text="formatDate(article?.createDate)"></div>
-            <div class="edition-tag">Special Correspondence</div>
           </div>
         </div>
 
@@ -670,7 +669,7 @@ function blogPage() {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
       });
       try {
-        const response = await fetch('http://localhost:5200/api/Blog/artical/1');
+        const response = await fetch('http://localhost:5000/api/Blog/Artical/2');
         if (!response.ok) throw new Error('The correspondent failed to file his report.');
         this.article = await response.json();
       } catch (err) {

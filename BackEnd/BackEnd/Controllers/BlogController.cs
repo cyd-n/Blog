@@ -20,7 +20,7 @@ namespace BackEnd.Controllers
             _readOnlyArticleService = _articleService;
         }
 
-        [HttpGet("artical/{_id}")]
+        [HttpGet("Artical/{_id}")]
         public async Task<IActionResult> GetArtical(int _id)
         {
             var article = await _context.articles.FirstOrDefaultAsync(m => m.Id == _id);
@@ -63,8 +63,27 @@ namespace BackEnd.Controllers
                 }
             });
         }
+        
+        [HttpGet("Articals")]
+        public async Task<IActionResult> GetArticals() {
+            var _articles = await _context.articles.ToListAsync();
+            
+            if (_articles == null) { return NotFound(new { message = "Posts not found" }); }
 
-        [HttpGet("user/{_id}")]
+            return Ok(new {
+                Articles = Enumerable.Range(0, _articles.Count).Select(i => new
+                    {
+                        Id = i,
+                        Title = _articles[i].Title ?? "Unkown Title",
+                        Summary = _articles[i].Summary ?? "Unkown Summary",
+                        ImageUrl = _articles[i ].ImageUrl ?? "Unkown Img",
+                        Author = _context.users.FirstOrDefault(m => m.Id == _articles[i].AuthorId),
+                        Category = _context.catories.FirstOrDefault(m => m.Id == _articles[i].AuthorId)
+                    })
+            });
+        }
+
+        [HttpGet("User/{_id}")]
         public async Task<IActionResult> GetUserInfo(int _id)
         {
             var user = await _context.users.FirstOrDefaultAsync(m => m.Id == _id);
@@ -149,6 +168,18 @@ namespace BackEnd.Controllers
         {
             var article = await _readOnlyArticleService.Create(_req);
             return Ok(new { id = article.Id });
+        }
+        
+        [HttpDelete("DeleteArtical/{_id}")]
+        public async Task<IActionResult> DeleteArticle(int _id) {
+            var _artical = await _context.articles.FindAsync(_id);
+
+            if (_artical == null) { return NotFound(new { message = "Article not found" }); }
+            
+            _context.articles.Remove(_artical);
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { Message = $"Artical: {_id} is deleted" });
         }
 
         // Make Comment
