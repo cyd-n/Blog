@@ -99,6 +99,26 @@ namespace BackEnd.Controllers
             });
         }
 
+        [HttpGet("Artical")]
+        public IActionResult GetArticles(int page = 1, int pageSize = 10)
+        {
+            int _totalArticles = _context.articles.Count();
+
+            var _articles = _context.articles
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return Ok(new {
+                Page = page,
+                PageSize = pageSize,
+                TotalArticles = _totalArticles,
+                TotalPages = (int)Math.Ceiling(
+                    _totalArticles / (double)pageSize),
+                Articles = _articles
+            });
+        }
+        
         [NonAction]
         public async Task<User?> AuthUser(int _id, string _name, string _pass)
         {
