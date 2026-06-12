@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en" x-data="adminApp()" x-init="init()">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Compositor's Desk — Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=UnifrakturMaguntia&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink:        '#100d08',
+            'ink-f':    '#2e2316',
+            'ink-l':    '#5c4a30',
+            paper:      '#f0e6ce',
+            'paper-d':  '#e2d3b0',
+            'paper-dd': '#cfc09a',
+            red:        '#7a1515',
+            'red-l':    '#9e2020',
+            gold:       '#8a6c20',
+            rule:       '#1a1006',
+          },
+          fontFamily: {
+            frak:    ['UnifrakturMaguntia', 'cursive'],
+            fell:    ['"IM Fell English"', 'Georgia', 'serif'],
+            play:    ['"Playfair Display"', 'Georgia', 'serif'],
+            mono:    ['"Courier Prime"', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --ink:#100d08; --ink-f:#2e2316; --ink-l:#5c4a30;
+      --paper:#f0e6ce; --paper-d:#e2d3b0; --paper-dd:#cfc09a;
+      --red:#7a1515; --gold:#8a6c20;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+
+    body {
+      background-color:#b0a090;
+      background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(0,0,0,.04) 27px,rgba(0,0,0,.04) 28px);
+      font-family:'IM Fell English',Georgia,serif;
+      color:var(--ink);
+      min-height:100vh;
+    }
+    /* grain */
+    body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:200;opacity:.22;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size:160px 160px}
+
+    /* Scrollbar */
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:var(--paper-d)}
+    ::-webkit-scrollbar-thumb{background:var(--ink-l)}
+
+    /* Textarea */
+    textarea,input,select{
+      font-family:'IM Fell English',Georgia,serif;
+      background:var(--paper);
+      color:var(--ink);
+      border:1px solid var(--ink);
+      outline:none;
+    }
+    textarea:focus,input:focus,select:focus{
+      border-color:var(--red);
+      box-shadow:0 0 0 2px rgba(122,21,21,.15);
+    }
+    textarea::placeholder,input::placeholder{color:var(--ink-l);opacity:.7;font-style:italic}
+
+    /* Transition utility */
+    [x-cloak]{display:none!important}
+
+    /* Toast */
+    .toast{
+      position:fixed;bottom:1.5rem;right:1.5rem;z-index:400;
+      background:var(--ink);color:var(--paper);
+      font-family:'Courier Prime',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+      padding:.55rem 1.1rem;border:1px solid var(--gold);
+    }
+
+    /* Status badge */
+    .badge-pub{background:#1a4a1a;color:#a8d8a8;border:1px solid #2a6a2a}
+    .badge-dra{background:#3a2a0a;color:#d4b870;border:1px solid #6a4a10}
+    .badge-arc{background:#2a1a1a;color:#c09090;border:1px solid #5a2a2a}
+
+    /* Row hover */
+    .post-row:hover{background:rgba(0,0,0,.04)}
+    .post-row{transition:background .12s}
+
+    /* Sidebar active */
+    .nav-item.active{background:var(--red);color:var(--paper)!important}
+    .nav-item{transition:background .12s,color .12s}
+    .nav-item:hover:not(.active){background:rgba(0,0,0,.08)}
+
+    /* Inner border on cards */
+    .inner-ruled::before{content:'';position:absolute;inset:4px;border:1px solid rgba(0,0,0,.12);pointer-events:none}
+
+    /* Striped table */
+    .tbl-row:nth-child(even){background:rgba(0,0,0,.03)}
+
+    /* Toggle switch */
+    .toggle-track{width:36px;height:18px;border-radius:0;transition:background .2s}
+    .toggle-thumb{width:14px;height:14px;transition:transform .2s}
+
+    /* Loading pulse */
+    @keyframes pressroll{0%,100%{opacity:.6}50%{opacity:1}}
+    .pressroll{animation:pressroll 1.2s ease-in-out infinite}
+  </style>
+</head>
+<body>
+
+<!-- ─── NAVBAR ─── -->
+<nav class="bg-ink border-b-2 border-red sticky top-0 z-[150]">
+  <div class="max-w-[1260px] mx-auto flex items-center">
+    <span class="font-mono text-[.58rem] tracking-[.2em] uppercase text-gold px-3 py-[.55rem] border-r border-[#333] whitespace-nowrap hidden sm:block">
+      Composing Room
+    </span>
+    <!-- nav links -->
+    <div class="flex flex-1 flex-wrap">
+      <template x-for="item in navItems" :key="item.id">
+        <button
+          @click="section = item.id"
+          :class="['nav-item font-mono text-[.68rem] font-bold tracking-[.1em] uppercase px-3 py-[.58rem] border-r border-[#2a2520] text-[#d4c9b0]', section===item.id ? 'active' : '']"
+          x-text="item.label">
+        </button>
+      </template>
+    </div>
+    <div class="font-mono text-[.58rem] text-[#7a7060] tracking-wide px-3 whitespace-nowrap hidden md:block" x-text="todayStr"></div>
+    <!-- user -->
+    <div class="flex items-center gap-2 px-3 border-l border-[#333]">
+      <div class="w-6 h-6 rounded-full bg-paper-dd border border-[#555] flex items-center justify-center">
+        <span class="font-mono text-[.55rem] text-ink font-bold">ED</span>
+      </div>
+      <span class="font-mono text-[.6rem] text-[#a09080] hidden sm:block">Editor-in-Chief</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── MASTHEAD ─── -->
+<div class="max-w-[1260px] mx-auto px-3 pt-4">
+  <div class="bg-paper border border-ink border-b-0 text-center py-4 px-6 relative">
+    <div class="font-frak text-4xl sm:text-5xl leading-none text-ink mb-1" style="text-shadow:2px 2px 0 rgba(0,0,0,.18)">
+      The Compositor's Desk
+    </div>
+    <div class="font-fell italic text-[.82rem] text-ink-l tracking-[.06em] border-t border-b border-paper-dd py-[.3rem] mt-1">
+      Editorial Administration &amp; Press Management — Private Access Only
+    </div>
+  </div>
+</div>
+
+<!-- ─── MAIN WRAP ─── -->
+<div class="max-w-[1260px] mx-auto px-3 pb-12">
+  <div class="bg-paper border border-ink flex flex-col lg:flex-row min-h-[600px]">
+
+    <!-- ─── SIDEBAR ─── -->
+    <aside class="lg:w-56 border-b-2 lg:border-b-0 lg:border-r-2 border-ink flex-shrink-0">
+      <!-- stats strip -->
+      <div class="border-b border-ink px-4 py-3">
+        <div class="font-mono text-[.55rem] tracking-[.18em] uppercase text-gold mb-2">Press Summary</div>
+        <div class="grid grid-cols-3 lg:grid-cols-1 gap-1">
+          <template x-for="stat in stats" :key="stat.label">
+            <div class="flex lg:flex-row flex-col items-start lg:items-center justify-between py-1 border-b border-paper-dd last:border-0">
+              <span class="font-mono text-[.6rem] text-ink-l uppercase tracking-wide" x-text="stat.label"></span>
+              <span class="font-play font-black text-lg lg:text-xl text-ink leading-none" x-text="stat.val"></span>
+            </div>
+          </template>
+        </div>
+      </div>
+      <!-- quick links -->
+      <div class="px-3 py-3">
+        <div class="font-mono text-[.55rem] tracking-[.18em] uppercase text-gold mb-2">Quick Actions</div>
+        <button @click="openNewPost()" class="w-full text-left font-mono text-[.65rem] tracking-[.08em] uppercase px-2 py-[.4rem] border border-ink bg-ink text-paper hover:bg-red transition-colors mb-1">
+          + New Article
+        </button>
+        <button @click="section='comments'" class="w-full text-left font-mono text-[.65rem] tracking-[.08em] uppercase px-2 py-[.4rem] border border-paper-dd text-ink-l hover:border-ink hover:text-ink transition-colors mb-1">
+          Moderate Comments
+          <span x-show="pendingComments > 0" class="float-right bg-red text-paper text-[.5rem] px-1" x-text="pendingComments"></span>
+        </button>
+        <button @click="section='settings'" class="w-full text-left font-mono text-[.65rem] tracking-[.08em] uppercase px-2 py-[.4rem] border border-paper-dd text-ink-l hover:border-ink hover:text-ink transition-colors">
+          Press Settings
+        </button>
+      </div>
+      <!-- ornament -->
+      <div class="px-4 pt-1 pb-3 text-gold text-center text-lg tracking-[.5em]">❧ ✦ ❧</div>
+    </aside>
+
+    <!-- ─── CONTENT ─── -->
+    <main class="flex-1 min-w-0">
+
+      <!-- ═══════ POSTS ═══════ -->
+      <div x-show="section==='posts'" x-cloak>
+        <!-- toolbar -->
+        <div class="border-b border-ink px-5 py-3 flex flex-wrap items-center gap-3">
+          <span class="font-frak text-xl text-ink">The Press Register</span>
+          <div class="ml-auto flex items-center gap-2 flex-wrap">
+            <!-- filter -->
+            <select x-model="filterStatus" class="font-mono text-[.65rem] tracking-[.06em] uppercase px-2 py-1 border-ink">
+              <option value="">All Status</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="archived">Archived</option>
+            </select>
+            <!-- search -->
+            <input x-model="searchQ" type="text" placeholder="Search dispatches…" class="font-mono text-[.7rem] px-2 py-1 border-ink w-44" />
+            <button @click="openNewPost()" class="font-mono text-[.62rem] font-bold tracking-[.12em] uppercase px-3 py-1 bg-ink text-paper border border-ink hover:bg-red transition-colors">
+              + Compose
+            </button>
+          </div>
+        </div>
+
+        <!-- table header -->
+        <div class="grid font-mono text-[.6rem] tracking-[.14em] uppercase text-ink-l border-b border-ink px-5 py-2 bg-paper-d" style="grid-template-columns:1fr 110px 90px 80px 70px">
+          <span>Headline</span><span>Author</span><span>Category</span><span>Date</span><span class="text-right">Status</span>
+        </div>
+
+        <!-- rows -->
+        <div class="divide-y divide-paper-dd">
+          <template x-for="post in filteredPosts" :key="post.id">
+            <div class="post-row grid items-center px-5 py-[.7rem] cursor-pointer group" style="grid-template-columns:1fr 110px 90px 80px 70px" @click="openEdit(post)">
+              <div>
+                <div class="font-play font-bold text-[.88rem] text-ink group-hover:text-red transition-colors leading-snug" x-text="post.title"></div>
+                <div class="font-fell italic text-[.72rem] text-ink-l mt-[.1rem] truncate" x-text="post.blurb"></div>
+              </div>
+              <span class="font-mono text-[.65rem] text-ink-l truncate" x-text="post.author"></span>
+              <span class="font-mono text-[.6rem] tracking-[.1em] uppercase text-red truncate" x-text="post.category"></span>
+              <span class="font-mono text-[.62rem] text-ink-l" x-text="post.date"></span>
+              <div class="text-right">
+                <span class="font-mono text-[.52rem] tracking-[.12em] uppercase px-[.4rem] py-[.15rem]"
+                  :class="{'badge-pub': post.status==='published', 'badge-dra': post.status==='draft', 'badge-arc': post.status==='archived'}"
+                  x-text="post.status"></span>
+              </div>
+            </div>
+          </template>
+          <div x-show="filteredPosts.length===0" class="px-5 py-10 text-center font-mono text-[.72rem] text-ink-l tracking-[.1em] uppercase">
+            — No dispatches found —
+          </div>
+        </div>
+
+        <!-- pagination hint -->
+        <div class="border-t border-paper-dd px-5 py-2 flex justify-between items-center">
+          <span class="font-mono text-[.6rem] text-ink-l" x-text="`Showing ${filteredPosts.length} of ${posts.length} entries`"></span>
+          <div class="flex gap-1">
+            <button class="font-mono text-[.6rem] px-2 py-1 border border-paper-dd text-ink-l hover:border-ink hover:text-ink transition-colors">‹ Prev</button>
+            <button class="font-mono text-[.6rem] px-2 py-1 border border-ink bg-ink text-paper">1</button>
+            <button class="font-mono text-[.6rem] px-2 py-1 border border-paper-dd text-ink-l hover:border-ink hover:text-ink transition-colors">Next ›</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ COMMENTS ═══════ -->
+      <div x-show="section==='comments'" x-cloak>
+        <div class="border-b border-ink px-5 py-3 flex items-center gap-3">
+          <span class="font-frak text-xl text-ink">Letters to the Editor</span>
+          <span class="font-mono text-[.58rem] tracking-[.12em] uppercase bg-red text-paper px-2 py-[.15rem]" x-text="`${pendingComments} Awaiting Review`"></span>
+        </div>
+        <div class="divide-y divide-paper-dd">
+          <template x-for="c in comments" :key="c.id">
+            <div class="px-5 py-4" :class="c.status==='pending' ? 'bg-[rgba(122,21,21,.04)]' : ''">
+              <div class="flex flex-wrap items-start gap-3 mb-2">
+                <div class="flex-1">
+                  <span class="font-mono font-bold text-[.72rem] text-ink" x-text="c.author"></span>
+                  <span class="font-mono text-[.6rem] text-ink-l ml-2" x-text="c.date"></span>
+                  <span class="font-mono text-[.55rem] tracking-[.1em] uppercase ml-2 px-[.4rem] py-[.12rem]"
+                    :class="c.status==='pending' ? 'badge-dra' : 'badge-pub'" x-text="c.status"></span>
+                </div>
+                <div class="flex gap-1">
+                  <button @click="approveComment(c.id)" x-show="c.status==='pending'"
+                    class="font-mono text-[.58rem] tracking-[.1em] uppercase px-2 py-1 border border-[#2a6a2a] text-[#2a6a2a] hover:bg-[#2a6a2a] hover:text-paper transition-colors">
+                    Approve
+                  </button>
+                  <button @click="deleteComment(c.id)"
+                    class="font-mono text-[.58rem] tracking-[.1em] uppercase px-2 py-1 border border-red text-red hover:bg-red hover:text-paper transition-colors">
+                    Reject
+                  </button>
+                </div>
+              </div>
+              <div class="font-fell text-[.85rem] text-ink-f italic leading-relaxed" x-text="c.body"></div>
+              <div class="font-mono text-[.6rem] text-ink-l mt-1">
+                On: <span class="text-red" x-text="c.post"></span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- ═══════ MEDIA ═══════ -->
+      <div x-show="section==='media'" x-cloak>
+        <div class="border-b border-ink px-5 py-3 flex items-center justify-between">
+          <span class="font-frak text-xl text-ink">The Photographic Archive</span>
+          <button class="font-mono text-[.62rem] font-bold tracking-[.12em] uppercase px-3 py-1 bg-ink text-paper border border-ink hover:bg-red transition-colors">
+            Upload Plate
+          </button>
+        </div>
+        <div class="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <template x-for="img in mediaItems" :key="img.id">
+            <div class="border border-ink relative overflow-hidden group cursor-pointer bg-paper-d aspect-square flex items-center justify-center">
+              <!-- simulated image tile -->
+              <div class="absolute inset-0 flex items-center justify-center" :style="`background:${img.color}`">
+                <span class="font-mono text-[.55rem] text-center tracking-[.06em] uppercase opacity-40 px-2" x-text="img.name"></span>
+              </div>
+              <div class="absolute inset-0 border-[3px] border-transparent group-hover:border-red transition-all"></div>
+              <div class="absolute bottom-0 left-0 right-0 bg-ink bg-opacity-80 py-1 px-2 translate-y-full group-hover:translate-y-0 transition-transform">
+                <span class="font-mono text-[.55rem] text-paper truncate block" x-text="img.name"></span>
+              </div>
+            </div>
+          </template>
+          <!-- upload slot -->
+          <div class="border-2 border-dashed border-paper-dd aspect-square flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-ink transition-colors">
+            <span class="text-2xl text-paper-dd">+</span>
+            <span class="font-mono text-[.6rem] tracking-[.1em] uppercase text-paper-dd">Add Plate</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ ANALYTICS ═══════ -->
+      <div x-show="section==='analytics'" x-cloak>
+        <div class="border-b border-ink px-5 py-3">
+          <span class="font-frak text-xl text-ink">The Circulation Ledger</span>
+        </div>
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- chart placeholder: readership -->
+          <div class="border border-ink bg-paper-d relative overflow-hidden p-4">
+            <div class="font-mono text-[.6rem] tracking-[.15em] uppercase text-gold mb-3">Weekly Readership</div>
+            <div class="flex items-end gap-[6px] h-28">
+              <template x-for="(bar,i) in chartBars" :key="i">
+                <div class="flex-1 flex flex-col items-center gap-1">
+                  <div class="w-full bg-ink opacity-80 hover:opacity-100 hover:bg-red transition-all cursor-pointer" :style="`height:${bar.h}%`"></div>
+                  <span class="font-mono text-[.5rem] text-ink-l" x-text="bar.day"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+          <!-- top articles -->
+          <div class="border border-ink p-4">
+            <div class="font-mono text-[.6rem] tracking-[.15em] uppercase text-gold mb-3">Most-Read Dispatches</div>
+            <div class="space-y-2">
+              <template x-for="(art,i) in topArticles" :key="i">
+                <div class="flex items-start gap-3">
+                  <span class="font-play font-black text-xl text-paper-dd leading-none" x-text="String(i+1).padStart(2,'0')"></span>
+                  <div>
+                    <div class="font-play font-bold text-[.82rem] text-ink leading-snug" x-text="art.title"></div>
+                    <div class="font-mono text-[.6rem] text-ink-l" x-text="art.reads + ' readings'"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+          <!-- referrers -->
+          <div class="border border-ink p-4">
+            <div class="font-mono text-[.6rem] tracking-[.15em] uppercase text-gold mb-3">Traffic Sources</div>
+            <div class="space-y-2">
+              <template x-for="ref in referrers" :key="ref.src">
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="font-mono text-[.65rem] text-ink-f" x-text="ref.src"></span>
+                    <span class="font-mono text-[.65rem] font-bold text-ink" x-text="ref.pct + '%'"></span>
+                  </div>
+                  <div class="h-[6px] bg-paper-dd border border-paper-darker">
+                    <div class="h-full bg-ink transition-all" :style="`width:${ref.pct}%`"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+          <!-- geo -->
+          <div class="border border-ink p-4">
+            <div class="font-mono text-[.6rem] tracking-[.15em] uppercase text-gold mb-3">Reader Territories</div>
+            <div class="space-y-[.4rem]">
+              <template x-for="geo in geoData" :key="geo.country">
+                <div class="flex justify-between font-mono text-[.65rem]">
+                  <span class="text-ink-f" x-text="geo.country"></span>
+                  <span class="text-ink font-bold" x-text="geo.sessions.toLocaleString()"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ SETTINGS ═══════ -->
+      <div x-show="section==='settings'" x-cloak>
+        <div class="border-b border-ink px-5 py-3">
+          <span class="font-frak text-xl text-ink">The Publisher's Office</span>
+        </div>
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Publication -->
+          <div class="border border-ink p-4 relative inner-ruled">
+            <div class="font-mono text-[.6rem] tracking-[.15em] uppercase text-gold mb-4">Publication Details</div>
+            <div class="space-y-3">
+              <template x-for="field in pubFields" :key="field.key">
+                <div>
+                  <label class="font-mono text-[.62rem] tracking-[.1em] uppercase text-ink-l block mb-1" x-text="field.label"></label>
+                  <input :type="field.type||'text'" x-model="settings[field.key]" class="w-full px-2 py-[.4rem] text-[.82rem]" />
+                </div>
+              </template>
+            </div>
+          </div>
+          <!-- Toggles -->
+          <div class="border border-ink p-4 relative inner-ruled">
+            <div class="font-mono text-[.6rem] tracking-[.15em] uppercase text-gold mb-4">Editorial Policies</div>
+            <div class="space-y-3">
+              <template x-for="tog in toggles" :key="tog.key">
+                <div class="flex items-center justify-between py-2 border-b border-paper-dd last:border-0">
+                  <div>
+                    <div class="font-mono text-[.7rem] font-bold text-ink" x-text="tog.label"></div>
+                    <div class="font-fell italic text-[.72rem] text-ink-l" x-text="tog.desc"></div>
+                  </div>
+                  <button @click="settings[tog.key] = !settings[tog.key]"
+                    class="toggle-track flex items-center px-[2px] border border-ink flex-shrink-0"
+                    :class="settings[tog.key] ? 'bg-ink justify-end' : 'bg-paper-dd justify-start'">
+                    <div class="toggle-thumb bg-paper border border-ink"></div>
+                  </button>
+                </div>
+              </template>
+            </div>
+          </div>
+          <!-- Save -->
+          <div class="md:col-span-2 flex justify-end gap-2">
+            <button @click="showToast('Settings preserved in the ledger.')" class="font-mono text-[.65rem] font-bold tracking-[.12em] uppercase px-4 py-2 bg-ink text-paper border border-ink hover:bg-red transition-colors">
+              Preserve Settings
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <div class="bg-paper border border-ink border-t-[3px] px-5 py-2 flex justify-between font-mono text-[.6rem] text-ink-l tracking-[.08em] flex-wrap gap-1" style="border-top-style:double">
+    <span>The Compositor's Desk &mdash; Admin Console v2.4</span>
+    <span x-text="todayStr"></span>
+    <span>All dispatches subject to editorial review</span>
+  </div>
+</div>
+
+<!-- ─── EDIT / NEW POST MODAL ─── -->
+<div x-show="modal.open" x-cloak
+  class="fixed inset-0 z-[300] flex items-start justify-center pt-6 pb-6 px-3 overflow-y-auto"
+  style="background:rgba(10,8,4,.75)">
+  <div class="bg-paper border-2 border-ink w-full max-w-2xl relative" @click.outside="modal.open=false">
+    <!-- modal header -->
+    <div class="bg-ink flex items-center justify-between px-5 py-3">
+      <span class="font-frak text-xl text-paper" x-text="modal.isNew ? 'Set the Type — New Dispatch' : 'Revise the Plate'"></span>
+      <button @click="modal.open=false" class="font-mono text-[.7rem] text-[#a09080] hover:text-paper transition-colors">✕ Close</button>
+    </div>
+    <div class="p-5 space-y-4">
+      <!-- title -->
+      <div>
+        <label class="font-mono text-[.6rem] tracking-[.12em] uppercase text-ink-l block mb-1">Headline</label>
+        <input x-model="modal.post.title" type="text" placeholder="The Headline of the Century…" class="w-full px-3 py-2 text-[1rem] font-play font-bold" />
+      </div>
+      <!-- deck / blurb -->
+      <div>
+        <label class="font-mono text-[.6rem] tracking-[.12em] uppercase text-ink-l block mb-1">Deck (Standfirst)</label>
+        <input x-model="modal.post.blurb" type="text" placeholder="A brief summary to entice the reader…" class="w-full px-3 py-2 text-[.88rem] font-fell italic" />
+      </div>
+      <!-- category + author -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="font-mono text-[.6rem] tracking-[.12em] uppercase text-ink-l block mb-1">Category</label>
+          <select x-model="modal.post.category" class="w-full px-3 py-2 text-[.82rem] font-mono uppercase tracking-wide">
+            <option>World Affairs</option>
+            <option>Science & Letters</option>
+            <option>Commerce</option>
+            <option>Society</option>
+            <option>Arts</option>
+            <option>Dispatches</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-mono text-[.6rem] tracking-[.12em] uppercase text-ink-l block mb-1">Correspondent</label>
+          <input x-model="modal.post.author" type="text" placeholder="By…" class="w-full px-3 py-2 text-[.82rem]" />
+        </div>
+      </div>
+      <!-- body -->
+      <div>
+        <label class="font-mono text-[.6rem] tracking-[.12em] uppercase text-ink-l block mb-1">Body Copy</label>
+        <textarea x-model="modal.post.body" rows="8" placeholder="Begin your dispatch here…" class="w-full px-3 py-2 text-[.9rem] leading-relaxed resize-y"></textarea>
+      </div>
+      <!-- status + date -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="font-mono text-[.6rem] tracking-[.12em] uppercase text-ink-l block mb-1">Status</label>
+          <select x-model="modal.post.status" class="w-full px-3 py-2 text-[.82rem] font-mono">
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-mono text-[.6rem] tracking-[.12em] uppercase text-ink-l block mb-1">Date</label>
+          <input x-model="modal.post.date" type="text" class="w-full px-3 py-2 text-[.82rem] font-mono" />
+        </div>
+      </div>
+      <!-- actions -->
+      <div class="flex gap-2 pt-2 border-t border-paper-dd flex-wrap">
+        <button @click="savePost()"
+          class="font-mono text-[.65rem] font-bold tracking-[.12em] uppercase px-4 py-2 bg-ink text-paper border border-ink hover:bg-red transition-colors">
+          <span x-text="modal.post.status==='published' ? '⊕ Send to Press' : '⊕ Save Draft'"></span>
+        </button>
+        <button x-show="!modal.isNew" @click="deletePost(modal.post.id)"
+          class="font-mono text-[.65rem] font-bold tracking-[.12em] uppercase px-4 py-2 border border-red text-red hover:bg-red hover:text-paper transition-colors">
+          Destroy Plate
+        </button>
+        <button @click="modal.open=false" class="font-mono text-[.65rem] tracking-[.1em] uppercase px-4 py-2 border border-paper-dd text-ink-l hover:border-ink hover:text-ink transition-colors ml-auto">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div x-show="toast.visible" x-cloak
+  x-transition:enter="transition ease-out duration-200"
+  x-transition:enter-start="opacity-0 translate-y-2"
+  x-transition:enter-end="opacity-100 translate-y-0"
+  x-transition:leave="transition ease-in duration-150"
+  x-transition:leave-start="opacity-100"
+  x-transition:leave-end="opacity-0"
+  class="toast">
+  ✦ <span x-text="toast.msg"></span>
+</div>
+
+<!-- ─── ALPINE APP ─── -->
+<script>
+function adminApp() {
+  return {
+    section: 'posts',
+    searchQ: '',
+    filterStatus: '',
+    todayStr: '',
+    toast: { visible: false, msg: '', timer: null },
+    modal: { open: false, isNew: false, post: {} },
+
+    navItems: [
+      { id:'posts',     label:'Dispatches' },
+      { id:'comments',  label:'Letters' },
+      { id:'media',     label:'Archive' },
+      { id:'analytics', label:'Circulation' },
+      { id:'settings',  label:'Press Office' },
+    ],
+
+    stats: [
+      { label:'Published', val: 0 },
+      { label:'Drafts',    val: 0 },
+      { label:'Readers',   val: '14.2k' },
+    ],
+
+    posts: [
+      { id:1, title:'Parliament Erupts Over New Navigation Acts', blurb:'A tumultuous session saw three ministers resign amid unprecedented scenes in the chamber.', author:'H. Blackwood', category:'World Affairs', date:'12 Jun 1886', status:'published', body:'' },
+      { id:2, title:'The Great Comet of the Season Observed at Greenwich', blurb:'Astronomers confirm the celestial wanderer will remain visible for a fortnight.', author:'E. Montagu', category:'Science & Letters', date:'10 Jun 1886', status:'published', body:'' },
+      { id:3, title:'Railway Strike Threatens Northern Commerce', blurb:'Union leaders vow to halt all freight until demands are met by month's end.', author:'C. Ashworth', category:'Commerce', date:'09 Jun 1886', status:'draft', body:'' },
+      { id:4, title:'The Season's Most Anticipated Exhibition Opens', blurb:'A new collection of Pre-Raphaelite masterworks draws fashionable society to the gallery.', author:'I. Hartley', category:'Arts', date:'08 Jun 1886', status:'published', body:'' },
+      { id:5, title:'Cholera Precautions Recommended for Eastern Parishes', blurb:'The Board of Health issues fresh guidance following reports from the docks.', author:'H. Blackwood', category:'Dispatches', date:'06 Jun 1886', status:'archived', body:'' },
+      { id:6, title:'On the Education of the Industrial Classes', blurb:'A leading reformist argues that technical schooling is the foundation of imperial strength.', author:'M. Forsythe', category:'Society', date:'03 Jun 1886', status:'draft', body:'' },
+    ],
+
+    comments: [
+      { id:1, author:'Reginald P. Harwick', date:'11 Jun 1886', status:'pending', body:'I find your characterisation of the Navigation Acts most inflammatory. As a merchant captain of thirty years standing, I must protest vigorously in the strongest terms.', post:'Parliament Erupts Over New Navigation Acts' },
+      { id:2, author:'Mrs. Opal Fennick', date:'11 Jun 1886', status:'pending', body:'The comet was indeed magnificent as seen from my terrace in Kensington. The gardener and I observed it for a full hour before supper.', post:'The Great Comet of the Season Observed at Greenwich' },
+      { id:3, author:'A Concerned Burgher', date:'10 Jun 1886', status:'approved', body:'The railway men have valid grievances. One need only visit the marshalling yards at dawn to understand the peril they labour under for miserable wages.', post:'Railway Strike Threatens Northern Commerce' },
+      { id:4, author:'Thaddeus K. Mole', date:'09 Jun 1886', status:'pending', body:'Your correspondent appears never to have visited a real gallery. The Pre-Raphaelites are a spent force, and one grows weary of their eternal damsels.', post:'The Season\'s Most Anticipated Exhibition Opens' },
+    ],
+
+    mediaItems: [
+      {id:1,name:'parliament_exterior.jpg',color:'#c8b890'},
+      {id:2,name:'comet_greenwich.jpg',color:'#1a1a2e'},
+      {id:3,name:'railway_yard.jpg',color:'#3a3028'},
+      {id:4,name:'gallery_interior.jpg',color:'#c4a882'},
+      {id:5,name:'port_docks.jpg',color:'#4a5060'},
+      {id:6,name:'schoolroom.jpg',color:'#b8a878'},
+      {id:7,name:'masthead_ornament.png',color:'#d4b870'},
+      {id:8,name:'portrait_editor.jpg',color:'#988060'},
+    ],
+
+    chartBars: [
+      {h:45,day:'M'},{h:62,day:'T'},{h:55,day:'W'},{h:80,day:'T'},
+      {h:70,day:'F'},{h:88,day:'S'},{h:52,day:'S'},
+    ],
+
+    topArticles: [
+      {title:'Parliament Erupts Over New Navigation Acts', reads:'3,412'},
+      {title:'The Great Comet of the Season Observed', reads:'2,788'},
+      {title:'Railway Strike Threatens Northern Commerce', reads:'2,109'},
+      {title:'On the Education of the Industrial Classes', reads:'1,644'},
+    ],
+
+    referrers: [
+      {src:'Direct / Type-in', pct:42},
+      {src:'News Exchange Wire', pct:28},
+      {src:'Society Circular', pct:18},
+      {src:'Other Press', pct:12},
+    ],
+
+    geoData: [
+      {country:'England',sessions:9820},
+      {country:'Scotland',sessions:1640},
+      {country:'Ireland',sessions:1100},
+      {country:'The Colonies',sessions:890},
+      {country:'Continent',sessions:440},
+    ],
+
+    settings: {
+      pubName: 'The Morning Dispatch',
+      tagline: '"All the News Fit to Set in Type"',
+      editorEmail: 'editor@morningdispatch.com',
+      postsPerPage: '12',
+      commentsEnabled: true,
+      moderateComments: true,
+      allowAnonymous: false,
+      maintenanceMode: false,
+    },
+
+    pubFields: [
+      {key:'pubName',    label:'Publication Name'},
+      {key:'tagline',    label:'Masthead Motto'},
+      {key:'editorEmail',label:'Editor's Correspondence', type:'email'},
+      {key:'postsPerPage',label:'Dispatches Per Edition'},
+    ],
+
+    toggles: [
+      {key:'commentsEnabled',  label:'Reader Letters',      desc:'Allow readers to submit letters to the editor'},
+      {key:'moderateComments', label:'Prior Moderation',    desc:'Review all letters before publication'},
+      {key:'allowAnonymous',   label:'Anonymous Correspondents', desc:'Accept unsigned correspondence'},
+      {key:'maintenanceMode',  label:'Press Silence',       desc:'Take the front page offline for maintenance'},
+    ],
+
+    get filteredPosts() {
+      return this.posts.filter(p => {
+        const q = this.searchQ.toLowerCase()
+        const matchQ = !q || p.title.toLowerCase().includes(q) || p.author.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+        const matchS = !this.filterStatus || p.status === this.filterStatus
+        return matchQ && matchS
+      })
+    },
+
+    get pendingComments() {
+      return this.comments.filter(c => c.status === 'pending').length
+    },
+
+    init() {
+      const d = new Date()
+      this.todayStr = d.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+      this.stats[0].val = this.posts.filter(p=>p.status==='published').length
+      this.stats[1].val = this.posts.filter(p=>p.status==='draft').length
+    },
+
+    openNewPost() {
+      this.modal.isNew = true
+      this.modal.post  = { id: Date.now(), title:'', blurb:'', author:'', category:'World Affairs', date: new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}), status:'draft', body:'' }
+      this.modal.open  = true
+      this.section     = 'posts'
+    },
+
+    openEdit(post) {
+      this.modal.isNew = false
+      this.modal.post  = { ...post }
+      this.modal.open  = true
+    },
+
+    savePost() {
+      if (!this.modal.post.title.trim()) return
+      if (this.modal.isNew) {
+        this.posts.unshift({ ...this.modal.post })
+      } else {
+        const i = this.posts.findIndex(p => p.id === this.modal.post.id)
+        if (i > -1) this.posts[i] = { ...this.modal.post }
+      }
+      this.stats[0].val = this.posts.filter(p=>p.status==='published').length
+      this.stats[1].val = this.posts.filter(p=>p.status==='draft').length
+      this.modal.open = false
+      this.showToast(this.modal.post.status === 'published' ? 'Dispatch sent to press.' : 'Draft held in the composing room.')
+    },
+
+    deletePost(id) {
+      this.posts = this.posts.filter(p => p.id !== id)
+      this.modal.open = false
+      this.showToast('Plate destroyed. Dispatch removed from the register.')
+    },
+
+    approveComment(id) {
+      const c = this.comments.find(c=>c.id===id)
+      if (c) { c.status = 'approved'; this.showToast('Letter approved for publication.') }
+    },
+
+    deleteComment(id) {
+      this.comments = this.comments.filter(c=>c.id!==id)
+      this.showToast('Letter rejected and filed.')
+    },
+
+    showToast(msg) {
+      clearTimeout(this.toast.timer)
+      this.toast.msg     = msg
+      this.toast.visible = true
+      this.toast.timer   = setTimeout(() => { this.toast.visible = false }, 3000)
+    },
+  }
+}
+</script>
+</body>
+</html>

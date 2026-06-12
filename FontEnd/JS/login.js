@@ -42,8 +42,8 @@
 
           const data = await response.json();
 
-          if (data.token) {
-            localStorage.setItem('token', data.token);
+          if (data.id) {
+            localStorage.setItem('token', data.id);
           }
 
           this.success = true;
