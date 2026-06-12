@@ -26,12 +26,12 @@
         this.loading = true;
 
         try { // dont work
-          const response = await fetch('http://localhost:5000/api/Auth/login', {
+          const response = await fetch('http://localhost:5000/api/Blog/Auth/Login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               email: this.form.email,
-              password: this.form.password
+              pass: this.form.password
             })
           });
 

@@ -120,29 +120,29 @@ namespace BackEnd.Controllers
         }
         
         [NonAction]
-        public async Task<User?> AuthUser(int _id, string _name, string _pass)
+        public async Task<User?> AuthUser(string _email, string _pass)
         {
-            var user = await _context.users.FirstOrDefaultAsync(u => u.Id == _id);
-
-            if (_name == user.Name) return null;
-            if (_pass == user.HashedPass) return null; 
+            var user = await _context.users.FirstAsync(u => u.Email == _email);
+            
+            if (_pass != user.HashedPass) return null; 
 
             return user;
         }
-
-        [NonAction]
-        public async Task<IActionResult> GetLogIn(int _id, string _name, string _pass)
+        
+        [HttpPost("Auth/Login")]
+        public async Task<IActionResult> GetLogIn([FromBody] LoginRequest _req)
         {
-            var user = await AuthUser(_id, _name, _pass);
+            var user = await AuthUser(_req.Email, _req.Pass);
 
-            if (user == null) { return NotFound(new { message = "User is Invalid" }); }
+            if (user == null)
+                return NotFound(new { message = "User is Invalid" });
 
             return Ok(new
             {
                 id = user.Id,
                 name = user.Name,
-                pass = user.HashedPass,
-                img = user.ProfielImgUrl ?? "Unkown"
+                email = user.Email,
+                img = user.ProfielImgUrl ?? "Unknown"
             });
         }
 
