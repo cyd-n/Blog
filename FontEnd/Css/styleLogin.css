@@ -1,0 +1,85 @@
+ :root {
+      --ink: #100d08;
+      --ink-faded: #2e2316;
+      --ink-light: #5c4a30;
+      --paper: #f0e6ce;
+      --paper-dark: #e2d3b0;
+      --paper-darker: #cfc09a;
+      --red: #7a1515;
+      --red-light: #9e2020;
+      --gold: #8a6c20;
+      --rule: #1a1006;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: #b0a090;
+      background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(0,0,0,0.04) 27px, rgba(0,0,0,0.04) 28px);
+      font-family: 'IM Fell English', Georgia, serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 200;
+      opacity: 0.28;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 160px 160px;
+    }
+
+    .font-fraktur  { font-family: 'UnifrakturMaguntia', cursive; }
+    .font-playfair { font-family: 'Playfair Display', Georgia, serif; }
+    .font-courier  { font-family: 'Courier Prime', monospace; }
+    .font-fell     { font-family: 'IM Fell English', Georgia, serif; }
+
+    hr.rule-double { border: none; border-top: 3px double var(--rule); }
+    hr.rule-thin   { border: none; border-top: 1px solid var(--paper-darker); }
+
+    .np-input {
+      width: 100%;
+      background: var(--paper-dark);
+      border: 1px solid var(--ink);
+      border-radius: 0;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.85rem;
+      color: var(--ink);
+      padding: 0.5rem 0.7rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .np-input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 2px rgba(122,21,21,0.15);
+    }
+    .np-input::placeholder { color: #9c8870; }
+
+    .np-btn {
+      font-family: 'Courier Prime', monospace;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .np-btn:hover { background: var(--red-light) !important; border-color: var(--red-light) !important; }
+    .np-btn:active { transform: scale(0.99); }
+
+    .nav-link {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #d4c9b0;
+      text-decoration: none;
+      padding: 0.6rem 0.9rem;
+      border-right: 1px solid #2a2520;
+      display: block;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-link:hover { background: var(--red); color: var(--paper); }

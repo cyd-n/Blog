@@ -1,0 +1,63 @@
+
+GET /api/articles?tag=aspnet
+
+Used when:
+
+user clicks a tag like "ASP.NET"
+------------------------------------
+
+GET /api/articles?search=dotnet
+
+Used when:
+
+search bar input
+-------------------------------------
+
+GET /api/articles?category=tech
+
+Used when:
+
+user clicks "Tech" category
+-------------------------------------
+
+GET /api/articles/{id}
+
+Used when:
+
+user clicks a blog post
+------------------------------------------------------
+
+GET /api/articles/{id}/comments
+
+Used when:
+
+viewing a blog post
+--------------------------------------------
+
+POST /api/articles/{id}/comments
+
+Used when:
+
+user writes a comment under a post
+------------------------------
+
+GET /api/categories
+
+Used for:
+
+sidebar menu (Tech, Gaming, AI, etc.)
+------------------------------
+
+POST /api/auth/register
+
+ Create account
+
+Used when:
+
+user signs up
+-----------------------------------
+
+POST /api/auth/login
+
+ Login user
+
